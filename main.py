@@ -40,11 +40,9 @@ with open(args.output_file, 'w') as output_file:
                 # Find the box with the smallest 'left' value
                 smallest_left_box = min(result.boxes, key=lambda box: np.array(box.xyxy.cpu(), dtype=int).squeeze()[0])
                 left, top, right, bottom = np.array(smallest_left_box.xyxy.cpu(), dtype=int).squeeze()
-                # Open the original image
-                org_img = cropped_img
                 # Crop the image based on the box coordinates
-                cropped_img = org_img.crop((left, top, right, bottom))
-                cls_results = cls_model(cropped_img, imgsz=128,save=True)  # predict on the cropped image
+                cropped_img_cls = cropped_img.crop((left, top, right, bottom))
+                cls_results = cls_model(cropped_img_cls, imgsz=128,save=True)  # predict on the cropped image
                 hero_name = cls_results[0].names[cls_results[0].probs.top1]
                 # Write the output
                 output_file.write(f"{img_filename} {hero_name}\n")
