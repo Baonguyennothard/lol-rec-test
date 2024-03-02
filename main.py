@@ -21,30 +21,34 @@ if output_dir and not os.path.exists(output_dir):  # Check if output_dir is not 
 
 with open(args.output_file, 'w') as output_file:
     for img_filename in os.listdir(args.input_folder):
-        img_path = os.path.join(args.input_folder, img_filename)
-        org_img = Image.open(img_path)
+        try:
+            img_path = os.path.join(args.input_folder, img_filename)
+            org_img = Image.open(img_path)
 
-        # Get the dimensions of the image
-        width, height = org_img.size
+            # Get the dimensions of the image
+            width, height = org_img.size
 
-        # Define the coordinates for the area to crop
-        # Left, Top, Right, Bottom
-        crop_area = (0, 0, width/2, height)
+            # Define the coordinates for the area to crop
+            # Left, Top, Right, Bottom
+            crop_area = (0, 0, width/2, height)
 
-        # Crop the image
-        cropped_img = org_img.crop(crop_area)
-        # Predict with the model
-        results = model(cropped_img, imgsz=640,save=True)  # predict on an image
-        for result in results:
-            if len(result.boxes) > 0:
-                # Find the box with the smallest 'left' value
-                smallest_left_box = min(result.boxes, key=lambda box: np.array(box.xyxy.cpu(), dtype=int).squeeze()[0])
-                left, top, right, bottom = np.array(smallest_left_box.xyxy.cpu(), dtype=int).squeeze()
-                # Crop the image based on the box coordinates
-                cropped_img_cls = cropped_img.crop((left, top, right, bottom))
-                cls_results = cls_model(cropped_img_cls, imgsz=128,save=True)  # predict on the cropped image
-                hero_name = cls_results[0].names[cls_results[0].probs.top1]
-                # Write the output
-                output_file.write(f"{img_filename} {hero_name}\n")
-            else:
-                output_file.write(f"{img_filename} There is no hero in the image\n")
+            # Crop the image
+            cropped_img = org_img.crop(crop_area)
+            # Predict with the model
+            results = model(cropped_img, imgsz=640,save=True)  # predict on an image
+            for result in results:
+                if len(result.boxes) > 0:
+                    # Find the box with the smallest 'left' value
+                    smallest_left_box = min(result.boxes, key=lambda box: np.array(box.xyxy.cpu(), dtype=int).squeeze()[0])
+                    left, top, right, bottom = np.array(smallest_left_box.xyxy.cpu(), dtype=int).squeeze()
+                    # Crop the image based on the box coordinates
+                    cropped_img_cls = cropped_img.crop((left, top, right, bottom))
+                    cls_results = cls_model(source=cropped_img_cls, imgsz=128,save=True)  # predict on the cropped image
+                    hero_name = cls_results[0].names[cls_results[0].probs.top1]
+                    # Write the output
+                    output_file.write(f"{img_filename} {hero_name}\n")
+                else:
+                    output_file.write(f"{img_filename} There is no hero in the image\n")
+        except Exception as e:
+            print(str(e))
+            continue
