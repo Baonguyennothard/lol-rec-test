@@ -35,7 +35,7 @@ with open(args.output_file, 'w') as output_file:
             # Crop the image
             cropped_img = org_img.crop(crop_area)
             # Predict with the model
-            results = model(cropped_img, imgsz=640,save=True)  # predict on an image
+            results = model(cropped_img, imgsz=640,save=False)  # predict on an image
             for result in results:
                 if len(result.boxes) > 0:
                     # Find the box with the smallest 'left' value
@@ -43,14 +43,11 @@ with open(args.output_file, 'w') as output_file:
                     left, top, right, bottom = np.array(smallest_left_box.xyxy.cpu(), dtype=int).squeeze()
                     # Crop the image based on the box coordinates
                     img_array = np.array(cropped_img)
-
-                    # Assuming 'left', 'top', 'right', 'bottom' are your cropping coordinates
                     # Crop the image using array slicing
                     cropped_array = img_array[top:bottom, left:right]
-
                     # Convert the cropped array back to a PIL Image
                     cropped_img_cls = Image.fromarray(cropped_array)
-                    cls_results = cls_model(source=cropped_img_cls, imgsz=128,save=True)  # predict on the cropped image
+                    cls_results = cls_model(source=cropped_img_cls, imgsz=128,save=False)  # predict on the cropped image
                     hero_name = cls_results[0].names[cls_results[0].probs.top1]
                     # Write the output
                     output_file.write(f"{img_filename} {hero_name}\n")
